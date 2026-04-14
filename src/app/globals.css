@@ -1,0 +1,160 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme {
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  --color-primary: #ffffff;
+  --color-primary-dark: #e5e5e5;
+  --color-secondary: #2f2f2f;
+
+  --color-bg-dark: #0d0d0d;
+  --color-card-dark: #171717;
+  --color-border-dark: #2f2f2f;
+}
+
+body {
+  background-color: #0d0d0d;
+  color: #ececec;
+  min-height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+/* Glassmorphism utility */
+.glass {
+  background: rgba(23, 23, 23, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #444;
+}
+
+:root {
+  --background: #0d0d0d;
+  --foreground: #ececec;
+  --card: #171717;
+  --card-foreground: #ececec;
+  --popover: #171717;
+  --popover-foreground: #ececec;
+  --primary: #ffffff;
+  --primary-foreground: #0d0d0d;
+  --secondary: #2f2f2f;
+  --secondary-foreground: #ececec;
+  --muted: #2f2f2f;
+  --muted-foreground: #b4b4b4;
+  --accent: #2f2f2f;
+  --accent-foreground: #ffffff;
+  --destructive: #7f1d1d;
+  --border: #2f2f2f;
+  --input: #2f2f2f;
+  --ring: #3b82f6;
+  --radius: 0.75rem;
+}
+
+
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+  }
+}
+
+/* Markdown Styles */
+strong, b { 
+  font-weight: 700 !important; 
+  color: white !important; 
+}
+ul { 
+  list-style-type: disc !important; 
+  margin-left: 1.5rem !important; 
+  margin-bottom: 0.75rem !important; 
+  display: block !important;
+}
+ol { 
+  list-style-type: decimal !important; 
+  margin-left: 1.5rem !important; 
+  margin-bottom: 0.75rem !important; 
+  display: block !important;
+}
+li { 
+  margin-bottom: 0.35rem !important; 
+  display: list-item !important;
+}
+p { 
+  margin-bottom: 0.75rem !important; 
+}
+h1, h2, h3, h4 {
+  font-weight: 700 !important;
+  color: white !important;
+  margin-top: 1.25rem !important;
+  margin-bottom: 0.5rem !important;
+}
+h1 { font-size: 1.5rem !important; }
+h2 { font-size: 1.25rem !important; }
+h3 { font-size: 1.1rem !important; }
+
+/* Code blocks */
+pre {
+  background: #1a1a2e !important;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 1rem !important;
+  margin: 0.75rem 0 !important;
+  overflow-x: auto;
+  font-size: 13px;
+}
+code {
+  font-family: "JetBrains Mono", "Fira Code", "SF Mono", monospace;
+  font-size: 0.85em;
+}
+:not(pre) > code {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.3rem;
+  color: #e2b714;
+}
+
+/* Streaming cursor animation */
+.streaming-text *:last-child::after {
+  content: "▋";
+  display: inline;
+  animation: blink 0.7s step-end infinite;
+  color: rgba(255, 255, 255, 0.5);
+  margin-left: 2px;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+/* Smooth bounce for dots */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
