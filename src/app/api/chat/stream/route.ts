@@ -100,9 +100,7 @@ export async function POST(req: Request) {
     });
 
     // consumeStream ensures onFinish runs even if the client disconnects
-    return result.toUIMessageStreamResponse({
-      consumeStream: true,
-    });
+    return result.toUIMessageStreamResponse();
   } catch (error: any) {
     console.error("[API] Error in chat/stream:", error);
     return new Response(JSON.stringify({ error: error.message }), {
