@@ -19,6 +19,7 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { ConversationSidebar } from "@/components/chat/ConversationSidebar";
+import { VoiceRecorder } from "@/components/chat/VoiceRecorder";
 import { cn } from "@/lib/utils";
 
 // ─── Models ───────────────────────────────────────────────────────────────────
@@ -175,12 +176,12 @@ export default function ChatbotPage() {
     onFinish: () => {
       fetchConversations();
     },
-    onError: (error) => {
+    onError: (error: any) => {
       toast.error("Error al conectar con el chat", {
         description: error.message,
       });
     },
-  });
+  }) as any;
 
   const handleSelectConversation = useCallback(async (threadId: string) => {
     if (threadId === activeThreadId) return;
@@ -229,19 +230,46 @@ export default function ChatbotPage() {
   );
 
   const handleSubmit = useCallback(
-    (message: PromptInputMessage) => {
+    async (message: PromptInputMessage) => {
       const content = message.text?.trim();
-      if (!content) return;
+      const files = message.files || [];
+      
+      if (!content && files.length === 0) return;
 
       setText("");
+      
+      // Handle voice notes or normal messages
+      const attachments = files.map(f => ({
+        url: f.url,
+        name: f.filename,
+        contentType: f.mediaType
+      }));
+
       append({
         role: "user",
-        parts: [{ type: "text" as const, text: content }],
+        parts: content ? [{ type: "text" as const, text: content }] : [],
+        experimental_attachments: attachments,
       } as any);
+      
       setTimeout(() => fetchConversations(), 1000);
     },
     [append, fetchConversations]
   );
+
+  const handleVoiceComplete = useCallback((file: File) => {
+    // Manually trigger a message with the voice file
+    const url = URL.createObjectURL(file);
+    append({
+      role: "user",
+      content: "Mensaje de voz", // Placeholder text
+      experimental_attachments: [{
+        url,
+        name: file.name,
+        contentType: file.type
+      }]
+    } as any);
+    setTimeout(() => fetchConversations(), 1000);
+  }, [append, fetchConversations]);
 
   const isSubmitDisabled = useMemo(
     () => !text.trim() || status === "streaming",
@@ -406,6 +434,10 @@ export default function ChatbotPage() {
                       disabled={isSubmitDisabled}
                       status={status as any}
                       className="rounded-full h-8 w-8 p-0 flex items-center justify-center bg-white text-black hover:bg-white/90 transition-all disabled:bg-white/10 disabled:text-white/10"
+                    />
+                    <VoiceRecorder 
+                       onRecordingComplete={handleVoiceComplete}
+                       isRecordingDisabled={status === "streaming"}
                     />
                   </div>
                 </div>

@@ -13,10 +13,51 @@ export async function POST(req: Request) {
     const threadId = providedThreadId || `web:${userId}`;
     const platform = threadId.startsWith("telegram:") ? "telegram" : "web";
 
-    // Extract user content from the latest message
+    // Extract user content and handle attachments
     const latestMessage = messages[messages.length - 1];
     let userContent = "";
-    if (latestMessage && latestMessage.role === "user") {
+    
+    // Check for attachments (like voice notes)
+    const attachments = latestMessage?.experimental_attachments || [];
+    const audioAttachment = attachments.find((a: any) => a.contentType?.startsWith("audio/"));
+
+    if (audioAttachment && audioAttachment.url) {
+      console.log("[API] Audio attachment detected, transcribing...");
+      try {
+        const response = await fetch(audioAttachment.url);
+        const blob = await response.blob();
+        
+        // Use OpenAI Whisper for transcription
+        const formData = new FormData();
+        formData.append("file", blob, "audio.webm");
+        formData.append("model", "whisper-1");
+
+        const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.OPENAI_API_KEY}`,
+          },
+          body: formData,
+        });
+
+        const whisperData = await whisperRes.json();
+        if (whisperData.text) {
+          userContent = whisperData.text;
+          console.log("[API] Transcription success:", userContent);
+          
+          // Inject transcription into the latest message for the LLM
+          if (latestMessage.parts) {
+            latestMessage.parts.push({ type: "text", text: `(Transcripción del audio): ${userContent}` });
+          } else {
+            latestMessage.content = userContent;
+          }
+        }
+      } catch (err) {
+        console.error("[API] Transcription error:", err);
+      }
+    }
+
+    if (!userContent && latestMessage && latestMessage.role === "user") {
       userContent = typeof latestMessage.content === "string"
         ? latestMessage.content
         : (latestMessage.parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("") || "");
