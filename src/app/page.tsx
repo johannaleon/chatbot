@@ -1,6 +1,7 @@
 "use client";
 
 import { useChat } from "@ai-sdk/react";
+import { DefaultChatTransport } from "ai";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -170,9 +171,11 @@ export default function ChatbotPage() {
     }
   }, []);
 
-  const { messages, append, status, setMessages, reload } = useChat({
-    api: "/api/chat/stream",
-    body: { threadId: activeThreadId, model: selectedModel },
+  const { messages, sendMessage, status, setMessages, regenerate } = useChat({
+    transport: new DefaultChatTransport({
+      api: "/api/chat/stream",
+      body: { threadId: activeThreadId, model: selectedModel },
+    }),
     onFinish: () => {
       fetchConversations();
     },
@@ -181,7 +184,7 @@ export default function ChatbotPage() {
         description: error.message,
       });
     },
-  }) as any;
+  });
 
   const handleSelectConversation = useCallback(async (threadId: string) => {
     if (threadId === activeThreadId) return;
@@ -238,38 +241,42 @@ export default function ChatbotPage() {
 
       setText("");
       
-      // Handle voice notes or normal messages
-      const attachments = files.map(f => ({
-        url: f.url,
-        name: f.filename,
-        contentType: f.mediaType
-      }));
-
-      append({
+      // Standard AI SDK append payload for text + files
+      sendMessage({
         role: "user",
-        parts: content ? [{ type: "text" as const, text: content }] : [],
-        experimental_attachments: attachments,
-      } as any);
+        parts: [
+          ...(content ? [{ type: "text" as const, text: content }] : [{ type: "text" as const, text: "Mensaje de voz" }]),
+          ...files.map(f => ({
+            type: "file" as const,
+            url: f.url,
+            mediaType: f.mediaType || "application/octet-stream",
+            filename: f.filename
+          }))
+        ]
+      });
       
       setTimeout(() => fetchConversations(), 1000);
     },
-    [append, fetchConversations]
+    [sendMessage, fetchConversations]
   );
 
   const handleVoiceComplete = useCallback((file: File) => {
     // Manually trigger a message with the voice file
     const url = URL.createObjectURL(file);
-    append({
+    sendMessage({
       role: "user",
-      content: "Mensaje de voz", // Placeholder text
-      experimental_attachments: [{
-        url,
-        name: file.name,
-        contentType: file.type
-      }]
-    } as any);
+      parts: [
+        { type: "text" as const, text: "Mensaje de voz" },
+        { 
+          type: "file" as const, 
+          url, 
+          mediaType: file.type || "audio/webm", 
+          filename: file.name 
+        }
+      ]
+    });
     setTimeout(() => fetchConversations(), 1000);
-  }, [append, fetchConversations]);
+  }, [sendMessage, fetchConversations]);
 
   const isSubmitDisabled = useMemo(
     () => !text.trim() || status === "streaming",
@@ -370,7 +377,7 @@ export default function ChatbotPage() {
                                 <CopyButton text={msgText} />
                                 {isLast && (
                                   <button
-                                    onClick={() => reload()}
+                                    onClick={() => regenerate()}
                                     className="p-1 rounded hover:bg-white/10 transition-colors text-white/30 hover:text-white/60"
                                     title="Regenerar respuesta"
                                   >

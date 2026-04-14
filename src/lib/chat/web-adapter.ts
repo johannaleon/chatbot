@@ -1,7 +1,7 @@
 import { Adapter, Message } from "chat";
 import { supabase } from "@/lib/supabase";
 
-export class WebAdapter implements Adapter {
+export class WebAdapter {
   name = "web";
 
   async postMessage(threadId: string, message: any): Promise<any> {

@@ -70,7 +70,7 @@ export const bot = new Chat({
   userName: "AI Concierge",
   state: stateAdapter as any,
   adapters: {
-    web: adapter,
+    web: adapter as any,
     telegram: createTelegramAdapter(),
   },
 });
