@@ -15,7 +15,7 @@ const memLists: Record<string, any[]> = {};
 const memQueues: Record<string, any[]> = {};
 const memSubscriptions: Set<string> = new Set();
 
-const stateAdapter = {
+export const stateAdapter = {
   // Key-value
   get: async (key: string) => memStore[key] ?? null,
   set: async (key: string, value: any) => { memStore[key] = value; },
@@ -198,6 +198,18 @@ async function handleFollowUp(thread: any, message: any) {
 
   await saveMessage(threadId, userId, text, "user");
   await replyWithAI(thread, threadId, text);
+}
+
+// ─── Exported Logic ──────────────────────────────────────────────────────────
+export async function handleBotLogic(thread: any, message: any) {
+  const threadId = thread.id;
+  const isSubscribed = await stateAdapter.isSubscribed(threadId);
+  
+  if (isSubscribed) {
+    await handleFollowUp(thread, message);
+  } else {
+    await handleFirstMessage(thread, message);
+  }
 }
 
 // onNewMention: signature is (thread, message, context?)

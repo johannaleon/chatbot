@@ -22,31 +22,31 @@ export async function POST(req: Request) {
         : (latestMessage.parts?.filter((p: any) => p.type === "text").map((p: any) => p.text).join("") || "");
     }
 
-    // Save user message to DB (don't await to keep response fast)
+    // Save user message to DB
     if (userContent) {
       const descriptiveName = userContent.split(" ").slice(0, 5).join(" ") +
         (userContent.split(" ").length > 5 ? "..." : "");
 
       console.log(`[API] Saving user message to thread: ${threadId}`);
       
-      supabase.from("conversations").upsert({
+      const { error: convError } = await supabase.from("conversations").upsert({
         thread_id: threadId,
         platform,
         user_id: userId,
         user_name: descriptiveName,
         updated_at: new Date().toISOString(),
-      }, { onConflict: "thread_id" }).then(({ error }) => {
-        if (error) console.error("[API] Error upserting conversation:", error.message);
-      });
+      }, { onConflict: "thread_id" });
 
-      supabase.from("chat_messages").insert([{
+      if (convError) console.error("[API] Error upserting conversation:", convError.message);
+
+      const { error: msgError } = await supabase.from("chat_messages").insert([{
         thread_id: threadId,
         user_id: userId,
         text: userContent,
         role: "user",
-      }]).then(({ error }) => {
-        if (error) console.error("[API] Error inserting user message:", error.message);
-      });
+      }]);
+
+      if (msgError) console.error("[API] Error inserting user message:", msgError.message);
     }
 
     console.log(`[API] Using model: ${modelId} for thread: ${threadId} (${platform})`);
