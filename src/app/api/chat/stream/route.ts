@@ -53,7 +53,7 @@ export async function POST(req: Request) {
     
     const result = streamText({
       model: openai(modelId),
-      messages: convertToModelMessages(messages),
+      messages: await convertToModelMessages(messages),
       system: "Eres un asistente de lujo 'Elite'. Responde de forma profesional, concisa y con un tono distinguido.",
       async onFinish({ text: botReply }) {
         console.log(`[API] onFinish called. Reply length: ${botReply?.length || 0}`);
