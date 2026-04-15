@@ -1,5 +1,14 @@
 import { bot, handleBotLogic, adapter } from "@/lib/chat/bot";
 
+// Desactivar el body-parser de Vercel/Next.js
+// Es necesario para que Telegram envíe los updates en su formato original
+export const config = {
+  api: {
+    bodyParser: false,
+    externalResolver: true,
+  },
+};
+
 export const runtime = "nodejs";
 
 export async function POST(request: Request) {
